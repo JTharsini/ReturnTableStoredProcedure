@@ -1,5 +1,5 @@
 CREATE PROCEDURE [dbo].[sp_handle_SubTypeCAfterADate]
-@p1 datetime
+@p1 varchar(20)
 AS
 BEGIN
 DECLARE @scheduleNoteOwnerType int = (SELECT [value] FROM dbo.TypeTable WHERE id = 'ownerTypeCommon');
@@ -15,10 +15,10 @@ DECLARE @PKOwnerMoreThanMaxServiceId AS PRIMARYKEY_NOTEOWNER;
 DECLARE @maxOfferId BIGINT;
 
 INSERT INTO @PKTimeNoteOwner(owner, noteOwner)
-SELECT ptp.primaryKey, SUBSTRING(pte.common, 1, (SELECT CHARINDEX(':', pte.common)) - 1) AS noteOwner FROM dbo.[TypeUsingTableC] ptp INNER 
+SELECT pte.owner, SUBSTRING(pte.common, 1, (SELECT CHARINDEX(':', pte.common)) - 1) AS noteOwner FROM dbo.[TypeUsingTableC] ptp INNER 
 JOIN dbo.[TypeUsingTableD] pte ON pte.[owner]=ptp.primaryKey WHERE ptp.active=1 AND ptp.[type] = @scheduleNoteType 
 AND ptp.active = 1 AND ptp.latest = 1 AND ptp.subtype = @scheduleTimeNoteType AND pte.[type] = @scheduleNoteOwnerType
-AND created > CAST(@p1 AS date)
+AND created > @p1
 OPTION (FORCE ORDER, LOOP JOIN);
 
 SET @maxOfferId = (SELECT TOP 1 id AS maxOfferId FROM dbo.OwnerTypeAData  WHERE latest = 1 ORDER BY CAST (id AS BIGINT) desc);
@@ -35,7 +35,7 @@ DELETE FROM @returned1;
 --------------------------------------------------------------------------------------------------------------------------------------------
 --3. Time note and note owner id <= max(offerId) and note owner id is not in resource --> owner is service type
 
-DECLARE @PKOwnerNotInResource TABLE (owner BIGINT, noteOwner VARCHAR(50));
+DECLARE @PKOwnerNotInResource PRIMARYKEY_NOTEOWNER;
 
 INSERT INTO @PKOwnerNotInResource 
 SELECT * FROM @PKTimeNoteOwner AS ioltms

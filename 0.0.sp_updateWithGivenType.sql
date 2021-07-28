@@ -12,12 +12,11 @@ DROP PROCEDURE dbo.[sp_updateWithGivenType];
 GO
 
 CREATE PROCEDURE [dbo].[sp_updateWithGivenType]
-	@owner BIGINT,
+	@owner INT,
 	@newType INT,
 	@newOwnerKey BIGINT OUTPUT
 AS
 BEGIN
-
 	IF EXISTS (SELECT * FROM dbo.TypeUsingTableC WHERE primaryKey = @owner)
 	BEGIN
 	
@@ -62,7 +61,7 @@ BEGIN
 			SET @newOwnerKey = @@IDENTITY
 
 			SET @SQL2 = '
-			UPDATE [' + @schema + '].[' + @table + '] SET created = ' + CONVERT(varchar, GETDATE(), 120) + ' WHERE [primaryKey] = ' + @owner;
+			UPDATE [' + @schema + '].[' + @table + '] SET created = ''' + CONVERT(varchar, GETDATE(), 120) + ''' WHERE [primaryKey] = ' + CAST(@owner AS VARCHAR(MAX));
 
 			EXEC sp_executesql @SQL2
 	
